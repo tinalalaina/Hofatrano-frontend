@@ -13,24 +13,31 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"client" | "owner" | "admin">("client");
+  const [errorMessage, setErrorMessage] = useState("");
   const allowAdminSignup = import.meta.env.VITE_ALLOW_ADMIN_SIGNUP === "true";
 
   const submit = async () => {
-    await registerUser({ username, email, password, role });
-    const redirectPath = searchParams.get("redirect");
-    if (role === "owner") {
-      navigate("/proprietaire/dashboard");
-      return;
+    try {
+      setErrorMessage("");
+      await registerUser({ username, email, password, role });
+      const redirectPath = searchParams.get("redirect");
+      if (role === "owner") {
+        navigate("/proprietaire/dashboard");
+        return;
+      }
+      if (role === "admin") {
+        navigate("/admin/dashboard");
+        return;
+      }
+      if (redirectPath) {
+        navigate(redirectPath);
+        return;
+      }
+      navigate("/client/profil");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Inscription impossible";
+      setErrorMessage(message);
     }
-    if (role === "admin") {
-      navigate("/admin/dashboard");
-      return;
-    }
-    if (redirectPath) {
-      navigate(redirectPath);
-      return;
-    }
-    navigate("/client/profil");
   };
 
   return (
@@ -49,6 +56,7 @@ const Register = () => {
               <Button type="button" variant={role === "admin" ? "default" : "outline"} onClick={() => setRole("admin")}>Admin</Button>
             )}
           </div>
+          {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
           <Button className="w-full" onClick={submit}>Créer un compte</Button>
         </div>
       </main>

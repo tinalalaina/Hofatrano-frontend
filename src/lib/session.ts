@@ -8,9 +8,22 @@ const parseErrorMessage = async (response: Response, fallbackMessage: string) =>
     if (typeof data?.detail === "string" && data.detail.trim().length > 0) {
       return data.detail;
     }
+    if (typeof data?.message === "string" && data.message.trim().length > 0) {
+      return data.message;
+    }
   } catch {
     // ignore JSON parsing errors and use fallback
   }
+
+  try {
+    const rawText = await response.text();
+    if (rawText.trim().length > 0) {
+      return rawText.trim();
+    }
+  } catch {
+    // ignore text parsing errors and use fallback
+  }
+
   return fallbackMessage;
 };
 
@@ -35,15 +48,34 @@ export const registerUser = async (payload: {
   password: string;
   role: "client" | "owner" | "admin";
 }) => {
-  const response = await fetch(`${API_BASE_URL}/auth/register/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) throw new Error(await parseErrorMessage(response, "Inscription impossible"));
-  const data = await response.json();
-  setToken(data.token);
-  return data.user as SessionUser;
+  const registerAttempts: Record<string, unknown>[] = [
+    payload,
+    { ...payload, user_type: payload.role },
+    { username: payload.username, email: payload.email, password: payload.password },
+  ];
+
+  let lastResponse: Response | null = null;
+  for (const attemptPayload of registerAttempts) {
+    const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(attemptPayload),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setToken(data.token);
+      return data.user as SessionUser;
+    }
+
+    lastResponse = response;
+    if (response.status < 500) {
+      break;
+    }
+  }
+
+  if (!lastResponse) throw new Error("Inscription impossible");
+  throw new Error(await parseErrorMessage(lastResponse, "Inscription impossible"));
 };
 
 export const loginUser = async (identifier: string, password: string) => {
