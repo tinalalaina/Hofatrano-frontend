@@ -1,7 +1,8 @@
 import { clearToken, getToken, setToken } from "@/lib/auth";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api").replace(/\/$/, "");
-const API_ORIGIN = new URL(API_BASE_URL).origin;
+const API_URL = new URL(API_BASE_URL);
+const API_ORIGIN = API_URL.origin;
 
 const parseErrorMessage = async (response: Response, fallbackMessage: string) => {
   try {
@@ -28,30 +29,27 @@ const parseErrorMessage = async (response: Response, fallbackMessage: string) =>
   return fallbackMessage;
 };
 
-const API_URL = new URL(API_BASE_URL);
-
 const resolveAssetUrl = (url?: string | null) => {
   if (!url) return "";
 
-  if (/^https?:\/\//i.test(url)) {
-    try {
-      const parsed = new URL(url);
-      const isSameHost = parsed.hostname === API_URL.hostname;
-      const apiHasCustomPort = API_URL.port.length > 0;
-      const imageHasNoPort = parsed.port.length === 0;
+  try {
+    const parsed = new URL(url, API_ORIGIN);
+    const sameHostname = parsed.hostname === API_URL.hostname;
+    const isMediaPath = parsed.pathname.startsWith("/media/");
 
-      if (isSameHost && apiHasCustomPort && imageHasNoPort) {
-        return `${API_ORIGIN}${parsed.pathname}${parsed.search}${parsed.hash}`;
-      }
-    } catch {
-      return url;
+    if (parsed.origin === API_ORIGIN) {
+      return parsed.href;
     }
 
-    return url;
-  }
+    if (sameHostname && isMediaPath) {
+      return `${API_ORIGIN}${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
 
-  if (url.startsWith("/")) return `${API_ORIGIN}${url}`;
-  return `${API_ORIGIN}/${url}`;
+    return parsed.href;
+  } catch {
+    if (url.startsWith("/")) return `${API_ORIGIN}${url}`;
+    return `${API_ORIGIN}/${url}`;
+  }
 };
 
 const normalizeSessionUser = (user: SessionUser): SessionUser => ({
