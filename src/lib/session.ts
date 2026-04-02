@@ -28,9 +28,28 @@ const parseErrorMessage = async (response: Response, fallbackMessage: string) =>
   return fallbackMessage;
 };
 
+const API_URL = new URL(API_BASE_URL);
+
 const resolveAssetUrl = (url?: string | null) => {
   if (!url) return "";
-  if (/^https?:\/\//i.test(url)) return url;
+
+  if (/^https?:\/\//i.test(url)) {
+    try {
+      const parsed = new URL(url);
+      const isSameHost = parsed.hostname === API_URL.hostname;
+      const apiHasCustomPort = API_URL.port.length > 0;
+      const imageHasNoPort = parsed.port.length === 0;
+
+      if (isSameHost && apiHasCustomPort && imageHasNoPort) {
+        return `${API_ORIGIN}${parsed.pathname}${parsed.search}${parsed.hash}`;
+      }
+    } catch {
+      return url;
+    }
+
+    return url;
+  }
+
   if (url.startsWith("/")) return `${API_ORIGIN}${url}`;
   return `${API_ORIGIN}/${url}`;
 };
