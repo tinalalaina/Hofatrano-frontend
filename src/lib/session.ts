@@ -1,6 +1,7 @@
 import { clearToken, getToken, setToken } from "@/lib/auth";
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api").replace(/\/$/, "");
+const API_ORIGIN = new URL(API_BASE_URL).origin;
 
 const parseErrorMessage = async (response: Response, fallbackMessage: string) => {
   try {
@@ -26,6 +27,18 @@ const parseErrorMessage = async (response: Response, fallbackMessage: string) =>
 
   return fallbackMessage;
 };
+
+const resolveAssetUrl = (url?: string | null) => {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return `${API_ORIGIN}${url}`;
+  return `${API_ORIGIN}/${url}`;
+};
+
+const normalizeSessionUser = (user: SessionUser): SessionUser => ({
+  ...user,
+  photo_url: resolveAssetUrl(user.photo_url),
+});
 
 export interface SessionUser {
   id: number;
@@ -65,7 +78,7 @@ export const registerUser = async (payload: {
     if (response.ok) {
       const data = await response.json();
       setToken(data.token);
-      return data.user as SessionUser;
+      return normalizeSessionUser(data.user as SessionUser);
     }
 
     lastResponse = response;
@@ -87,7 +100,7 @@ export const loginUser = async (identifier: string, password: string) => {
   if (!response.ok) throw new Error(await parseErrorMessage(response, "Connexion impossible"));
   const data = await response.json();
   setToken(data.token);
-  return data.user as SessionUser;
+  return normalizeSessionUser(data.user as SessionUser);
 };
 
 export const logoutUser = async () => {
@@ -106,7 +119,8 @@ export const fetchMe = async (): Promise<SessionUser | null> => {
     clearToken();
     return null;
   }
-  return response.json();
+  const data = (await response.json()) as SessionUser;
+  return normalizeSessionUser(data);
 };
 
 export const updateMe = async (payload: Partial<SessionUser> | FormData) => {
@@ -119,5 +133,6 @@ export const updateMe = async (payload: Partial<SessionUser> | FormData) => {
     body: isFormData ? payload : JSON.stringify(payload),
   });
   if (!response.ok) throw new Error(await parseErrorMessage(response, "Impossible d'enregistrer le profil"));
-  return response.json() as Promise<SessionUser>;
+  const data = (await response.json()) as SessionUser;
+  return normalizeSessionUser(data);
 };
