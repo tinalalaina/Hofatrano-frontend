@@ -29,6 +29,7 @@ import {
 
 const MAX_PHOTOS = 12;
 const MAX_IMAGE_SIZE_MB = 5;
+const MAX_TOTAL_UPLOAD_SIZE_MB = 12;
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api").replace(/\/$/, "");
 const API_ORIGIN = new URL(API_BASE_URL).origin;
@@ -149,12 +150,19 @@ export const fetchOwnerWorkspace = async () => {
 export const photoUploadRules = {
   maxPhotos: MAX_PHOTOS,
   maxImageSizeMb: MAX_IMAGE_SIZE_MB,
+  maxTotalUploadSizeMb: MAX_TOTAL_UPLOAD_SIZE_MB,
   allowedTypes: ALLOWED_TYPES,
 };
 
-export const validatePhotos = (files: File[], existingCount: number): string | null => {
-  if (existingCount + files.length > MAX_PHOTOS) {
+export const validatePhotos = (files: File[], existingPhotos: UploadPhoto[]): string | null => {
+  if (existingPhotos.length + files.length > MAX_PHOTOS) {
     return `Maximum ${MAX_PHOTOS} photos autorisées par maison.`;
+  }
+
+  const existingUploadSize = existingPhotos.reduce((sum, photo) => sum + (photo.file?.size || 0), 0);
+  const selectedUploadSize = files.reduce((sum, file) => sum + file.size, 0);
+  if (existingUploadSize + selectedUploadSize > MAX_TOTAL_UPLOAD_SIZE_MB * 1024 * 1024) {
+    return `Photos trop lourdes. Taille totale max : ${MAX_TOTAL_UPLOAD_SIZE_MB}MB.`;
   }
 
   for (const file of files) {

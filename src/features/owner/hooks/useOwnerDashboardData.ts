@@ -28,7 +28,7 @@ export const useOwnerDashboardData = () => {
       toast.success("Maison ajoutée avec succès.");
       await queryClient.invalidateQueries({ queryKey: ["owner", "workspace"] });
     },
-    onError: () => toast.error("Impossible d'ajouter la maison."),
+    onError: (error: Error) => toast.error(error.message || "Impossible d'ajouter la maison."),
   });
 
   const updateMutation = useMutation({
@@ -39,7 +39,7 @@ export const useOwnerDashboardData = () => {
       setEditingHouseId(null);
       await queryClient.invalidateQueries({ queryKey: ["owner", "workspace"] });
     },
-    onError: () => toast.error("Modification impossible."),
+    onError: (error: Error) => toast.error(error.message || "Modification impossible."),
   });
 
   const deleteMutation = useMutation({

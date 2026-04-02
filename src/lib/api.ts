@@ -157,6 +157,16 @@ const appendFormDataValue = (formData: FormData, key: string, value: unknown) =>
   formData.append(key, String(value));
 };
 
+const getRequestErrorMessage = async (response: Response, fallback: string) => {
+  if (response.status === 413) {
+    return "Les photos sont trop lourdes pour le serveur. Réduisez leur taille puis réessayez.";
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (typeof data?.detail === "string" && data.detail.trim()) return data.detail;
+  return fallback;
+};
+
 export const fetchHouses = async (query: HouseQuery = {}): Promise<House[]> => {
   const qs = queryString(query);
   const response = await fetch(`${API_BASE_URL}/houses/${qs ? `?${qs}` : ""}`);
@@ -186,7 +196,7 @@ export const createHouse = async (payload: Partial<House>, photos: File[] = []) 
     headers: hasPhotos ? formHeaders() : jsonHeaders(),
     body,
   });
-  if (!response.ok) throw new Error("Impossible d'ajouter la maison");
+  if (!response.ok) throw new Error(await getRequestErrorMessage(response, "Impossible d'ajouter la maison"));
   return response.json();
 };
 
@@ -204,7 +214,7 @@ export const updateHouse = async (houseId: string, payload: Partial<House>, phot
     headers: hasPhotos ? formHeaders() : jsonHeaders(),
     body,
   });
-  if (!response.ok) throw new Error("Impossible de modifier la maison");
+  if (!response.ok) throw new Error(await getRequestErrorMessage(response, "Impossible de modifier la maison"));
   return response.json();
 };
 

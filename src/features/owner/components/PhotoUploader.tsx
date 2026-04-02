@@ -33,7 +33,7 @@ export const PhotoUploader = ({ photos, onChange, error, onError }: Props) => {
 
   const onFilesSelected = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
-    const validationError = validatePhotos(selectedFiles, photos.length);
+    const validationError = validatePhotos(selectedFiles, photos);
     if (validationError) {
       onError(validationError);
       return;
@@ -78,7 +78,9 @@ export const PhotoUploader = ({ photos, onChange, error, onError }: Props) => {
         <div>
           <p className="font-medium">Photos de la maison</p>
           <p className="text-sm text-muted-foreground">
-            {photos.length}/{photoUploadRules.maxPhotos} • Formats: JPG, JPEG, PNG, WEBP • Max {photoUploadRules.maxImageSizeMb}MB
+            {photos.length}/{photoUploadRules.maxPhotos} • Formats: JPG, JPEG, PNG, WEBP • Max {photoUploadRules.maxImageSizeMb}MB/image •
+            {" "}
+            {photoUploadRules.maxTotalUploadSizeMb}MB total
           </p>
         </div>
         <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={photos.length >= photoUploadRules.maxPhotos}>
