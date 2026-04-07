@@ -1,6 +1,6 @@
 import { clearToken, getToken, setToken } from "@/lib/auth";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api").replace(/\/$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://hofatrano.tina-lalaina.site/api").replace(/\/$/, "");
 const API_URL = new URL(API_BASE_URL);
 const API_ORIGIN = API_URL.origin;
 
