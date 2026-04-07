@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies & Build
+      - name: Install & Build frontend
         run: |
           npm ci
           npm run build
@@ -32,11 +32,11 @@ jobs:
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
-          context: .                     # dossier du frontend
+          context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/gasy-car-frontend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/gasy-car-frontend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/hofatrano-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/hofatrano-frontend:${{ github.sha }}
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
