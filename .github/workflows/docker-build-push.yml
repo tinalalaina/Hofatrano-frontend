@@ -17,8 +17,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
-      - name: Install & Build frontend
+      - name: Install dependencies & Build
         run: |
           npm ci
           npm run build
@@ -38,12 +39,16 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/hofatrano-frontend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/hofatrano-frontend:${{ github.sha }}
 
-      - name: Deploy on VPS
+      - name: Deploy on VPS via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
           script: |
+            echo "🚀 Déploiement Frontend terminé - Démarrage du pull sur le VPS..."
             cd /opt/gasy-car/infra
             /opt/gasy-car/infra/deploy/deploy.sh "${{ secrets.DOCKERHUB_USERNAME }}" "latest"
