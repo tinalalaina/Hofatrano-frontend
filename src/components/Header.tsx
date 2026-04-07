@@ -58,7 +58,7 @@ const Header = () => {
             ) : (
               <>
                 <Button variant="outline" size="sm" className="flex-1" asChild><Link to="/connexion">Connexion</Link></Button>
-                <Button size="sm" className="flex-1" asChild><Link to="/inscription">S'inscrire</Link></Button>
+                <Button size="sm" className="flex-1" asChild><Link to="/inscription">S'inscrire ok</Link></Button>
               </>
             )}
           </div>
