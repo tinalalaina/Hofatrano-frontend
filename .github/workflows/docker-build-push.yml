@@ -1,4 +1,4 @@
-name: Frontend - Build & Deploy to VPS
+name: Frontend - Build & Push only
 
 on:
   push:
@@ -6,20 +6,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout frontend code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: Install dependencies & Build
+      - name: Install & Build
         run: |
           npm ci
           npm run build
@@ -30,7 +29,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push frontend image
+      - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -38,17 +37,3 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/hofatrano-frontend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/hofatrano-frontend:${{ github.sha }}
-
-      - name: Deploy on VPS via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: 22
-          timeout: 30s
-          command_timeout: 10m
-          script: |
-            echo "🚀 Déploiement Frontend terminé - Démarrage du pull sur le VPS..."
-            cd /opt/gasy-car/infra
-            /opt/gasy-car/infra/deploy/deploy.sh "${{ secrets.DOCKERHUB_USERNAME }}" "latest"
