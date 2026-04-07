@@ -28,7 +28,7 @@ const Index = () => {
         <div className="relative container mx-auto px-4">
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display text-primary-foreground leading-tight mb-4 animate-fade-in-up">
-              Trouvez votre <span className="text-accent">trano</span> idéal à Madagascar
+              Trouvez votre <span className="text-accent">trano</span> idéal à Madagascar teste ceci cicd
             </h1>
             <p className="text-lg text-primary-foreground/80 mb-8 font-body animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
               Location de maisons dans toute l'île. Simple, rapide et sécurisé.
